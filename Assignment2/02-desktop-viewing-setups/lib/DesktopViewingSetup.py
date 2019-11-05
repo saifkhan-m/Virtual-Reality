@@ -48,7 +48,7 @@ class DesktopViewingSetup(avango.script.Script):
 
         # additional transformation nodes
         # YOUR CODE - BEGIN (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
-        bird_transform=self.scenegraph['/bird_rot_animation/bird_transform']
+        self.bird_transform=self.scenegraph['/bird_rot_animation/bird_transform']
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
 
         # screen node
@@ -60,7 +60,14 @@ class DesktopViewingSetup(avango.script.Script):
             0.0, 0.0, -0.6)
 
         # YOUR CODE - BEGIN (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Screen Node)
-        bird_transform.Children.value.append(self.screen_node)
+        
+        print('&&&&&&&&&&&', self.bird_transform.Transform.value)
+        matCamera = avango.gua.Mat4()
+        matCamera.set_element(2,3,-5)
+        matCamera.set_element(2,2,-5)
+        self.screen_node.Transform.value = matCamera
+        print('_____________________', self.screen_node.Transform.value)
+        self.bird_transform.Children.value.append(self.screen_node)
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Screen Node)
 
         # camera node (head)
@@ -69,12 +76,18 @@ class DesktopViewingSetup(avango.script.Script):
         self.camera_node.LeftScreenPath.value = self.screen_node.Path.value
         # YOUR CODE - BEGIN (Exercise 2.4 - Set Blacklist on Camera)
         self.sf_visibility_toggle_changed()
+        self.changed=True
         #print('Tag List',bird_geometry_node.Tags.value)
         
         # YOUR CODE - END (Exercise 2.4 - Set Blacklist on Camera)
 
         # YOUR CODE - BEGIN (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Camera Node)
-        bird_transform.Children.value.append(self.camera_node)
+        
+        matCamera = avango.gua.Mat4()
+        matCamera.set_element(2,3,5)
+        matCamera.set_element(2,2,5)
+        self.camera_node.Transform.value = matCamera
+        self.bird_transform.Children.value.append(self.camera_node)
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Camera Node)
 
         # create keyboard sensor and connect fields
@@ -125,21 +138,22 @@ class DesktopViewingSetup(avango.script.Script):
     # called whenever sf_visibility_toggle_changes
     @field_has_changed(sf_visibility_toggle)
     def sf_visibility_toggle_changed(self):
+
         if self.sf_visibility_toggle.value:
             node_to_toggle = self.scenegraph['/bird_rot_animation/bird_transform/bird_model']
             # YOUR CODE - BEGIN (Exercise 2.4 - Toggle Tag to Match or Unmatch Blacklist)
             node_to_toggle.Tags.value= ['alt_toggle']
-            print('in')
-            print('tgs',[item for item in node_to_toggle.Tags.value])
-            self.camera_node.BlackList.value = node_to_toggle.Tags.value
-        else:
-            self.camera_node.BlackList.value = []
+            if(self.changed):
+                self.camera_node.BlackList.value = node_to_toggle.Tags.value
+                self.changed=False
+            else:
+                self.camera_node.BlackList.value = []
+                self.changed=True
             # YOUR CODE - END (Exercise 2.4 - Toggle Tag to Match or Unmatch Blacklist)
 
     # computes the field-of-view of the viewing setup and returns the result in degrees
     def compute_fov_in_deg(self):
         # YOUR CODE - BEGIN (Exercise 2.1 - Compute FOV from Camera-Screen Relation)
-        #print('jadsjkbsdfjkb',self.screen_node.Transform.value.get_element(2,3))
         return 2*math.degrees(math.atan((SCREEN_SIZE.x/2)/(self.screen_node.Transform.value.get_element(2,3))))
         # YOUR CODE - BEGIN (Exercise 2.1 - Compute FOV from Camera-Screen Relation)
 
@@ -147,11 +161,9 @@ class DesktopViewingSetup(avango.script.Script):
     def set_fov_in_deg(self, degrees):
         # YOUR CODE - BEGIN (Exercise 2.2 - Set desired FOV)
         screen_cam_dist=(SCREEN_SIZE.x/2)/(math.tan(math.radians(degrees/2)))
-        #print(self.screen_node.Transform.value)
         mat=avango.gua.Mat4()
-        mat.set_element(2,3,0.5)
-        self.screen_node.Transform.value.set_element(2,3,screen_cam_dist)
-        #print('self.screen_node.Transform.value.)',self.screen_node.Transform.value.get_element(2,3))
+        mat.set_element(2,3,screen_cam_dist)
+        self.screen_node.Transform.value=mat
         # YOUR CODE - END (Exercise 2.2 - Set desired FOV)
 
     # computes the model-view transformation of a given node
