@@ -12,7 +12,7 @@ import time
 
 # constant size of the window on the monitor in meters
 # YOUR CODE - BEGIN (Exercise 2.0 - Screen Size)
-SCREEN_SIZE = avango.gua.Vec2(0.60, 0.35)
+SCREEN_SIZE = avango.gua.Vec2(0.64, 0.40)
 # YOUR CODE - END (Exercise 2.0 - Screen Size)
 
 # appends a camera node, screen node, and navigation capabilities to the scenegraph
@@ -49,6 +49,10 @@ class DesktopViewingSetup(avango.script.Script):
         # additional transformation nodes
         # YOUR CODE - BEGIN (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
         self.bird_transform=self.scenegraph['/bird_rot_animation/bird_transform']
+        self.setup_back = avango.gua.nodes.TransformNode(Name='Setup_back')
+        self.setup_back.Transform.value = avango.gua.make_trans_mat(0.0, 0.0, 5.0)
+        self.setup_back_rot = avango.gua.nodes.TransformNode(Name='Setup_Rot_back')
+        self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.1,0,1,0)
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
 
         # screen node
@@ -61,13 +65,16 @@ class DesktopViewingSetup(avango.script.Script):
 
         # YOUR CODE - BEGIN (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Screen Node)
         
-        print('&&&&&&&&&&&', self.bird_transform.Transform.value)
         matCamera = avango.gua.Mat4()
-        matCamera.set_element(2,3,-5)
-        matCamera.set_element(2,2,-5)
-        self.screen_node.Transform.value = matCamera
-        print('_____________________', self.screen_node.Transform.value)
-        self.bird_transform.Children.value.append(self.screen_node)
+        matCamera.set_element(2,3,5)
+        #matCamera.set_element(2,2,-5)
+        #self.screen_node.Transform.value = matCamera
+        #print('_____________________', self.screen_node.Transform.value)
+        self.bird_transform.Children.value.append(self.setup_back)
+        self.setup_back.Children.value.append(self.setup_back_rot)
+        self.setup_back_rot.Children.value.append(self.screen_node)
+        
+        #self.screen_node.Transform.value = matCamera
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Screen Node)
 
         # camera node (head)
@@ -85,9 +92,11 @@ class DesktopViewingSetup(avango.script.Script):
         
         matCamera = avango.gua.Mat4()
         matCamera.set_element(2,3,5)
-        matCamera.set_element(2,2,5)
-        self.camera_node.Transform.value = matCamera
-        self.bird_transform.Children.value.append(self.camera_node)
+        #matCamera.set_element(2,2,5)
+        #self.camera_node.Transform.value = matCamera
+        self.setup_back_rot.Children.value.append(self.camera_node)
+        
+        #self.camera_node.Transform.value = matCamera
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Attach Camera Node)
 
         # create keyboard sensor and connect fields
@@ -105,10 +114,10 @@ class DesktopViewingSetup(avango.script.Script):
         # compute and set field-of-view (used to check Exercises 2.1 and 2.2)
         print("The camera's field of view is initially: " +
               str(round(self.compute_fov_in_deg(), 3)) + " deg")
-        self.set_fov_in_deg(45)
-        print('zuqwezuqe',self.screen_node.Transform.value.get_element(2,3))
-        print("After set_fov_in_deg, the camera's field of view is: " +
-              str(round(self.compute_fov_in_deg(), 3)) + " deg")
+        #self.set_fov_in_deg(45)
+        #print('zuqwezuqe',self.screen_node.Transform.value.get_element(2,3))
+        #print("After set_fov_in_deg, the camera's field of view is: " +
+         #     str(round(self.compute_fov_in_deg(), 3)) + " deg")
 
         # compute model-view transform of bird (used to check Exercise 2.9)
         bird_geometry_node = self.scenegraph['/bird_rot_animation/bird_transform/bird_model']
@@ -126,7 +135,9 @@ class DesktopViewingSetup(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
 
         # YOUR CODE - BEGIN (Exercise 2.6 - Map Left and Right Arrow Keys)
-        # ...
+        if(self.sf_right_arrow_key):
+            self.setup_back_rot.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.value
+
         # YOUR CODE - END (Exercise 2.6 - Map Left and Right Arrow Keys)
 
         # YOUR CODE - BEGIN (Exercise 2.7 - Map Up and Down Arrow Keys)
