@@ -29,7 +29,11 @@ class DesktopViewingSetup(avango.script.Script):
     sf_right_arrow_key.value = False
 
     # YOUR CODE - BEGIN (Exercise 2.7 - Fields for Up and Down Arrow Keys)
-    # ...
+    sf_up_arrow_key = avango.SFBool()
+    sf_up_arrow_key.value = False
+
+    sf_down_arrow_key = avango.SFBool()
+    sf_down_arrow_key.value = False
     # YOUR CODE - END (Exercise 2.7 - Fields for Up and Down Arrow Keys)
 
     def __init__(self):
@@ -49,10 +53,12 @@ class DesktopViewingSetup(avango.script.Script):
         # additional transformation nodes
         # YOUR CODE - BEGIN (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
         self.bird_transform=self.scenegraph['/bird_rot_animation/bird_transform']
-        self.setup_back = avango.gua.nodes.TransformNode(Name='Setup_back')
+        self.setup_back = avango.gua.nodes.TransformNode(Name='Setup_Translate')
         self.setup_back.Transform.value = avango.gua.make_trans_mat(0.0, 0.0, 5.0)
-        self.setup_back_rot = avango.gua.nodes.TransformNode(Name='Setup_Rot_back')
-        self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.1,0,1,0)
+        self.setup_back_rot = avango.gua.nodes.TransformNode(Name='Rightleft_Rot_back')
+        self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.0,0.0,0.0,0.0)
+        self.upDown_back_rot = avango.gua.nodes.TransformNode(Name='UPDOWN_Rot_back')
+        self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(0.0,0.0,0.0,0.0)
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
 
         # screen node
@@ -70,7 +76,8 @@ class DesktopViewingSetup(avango.script.Script):
         #matCamera.set_element(2,2,-5)
         #self.screen_node.Transform.value = matCamera
         #print('_____________________', self.screen_node.Transform.value)
-        self.bird_transform.Children.value.append(self.setup_back)
+        self.bird_transform.Children.value.append(self.upDown_back_rot)
+        self.upDown_back_rot.Children.value.append(self.setup_back)
         self.setup_back.Children.value.append(self.setup_back_rot)
         self.setup_back_rot.Children.value.append(self.screen_node)
         
@@ -108,7 +115,8 @@ class DesktopViewingSetup(avango.script.Script):
         self.sf_right_arrow_key.connect_from(self.keyboard_sensor.Button6)
         self.sf_visibility_toggle.connect_from(self.keyboard_sensor.Button7)
         # YOUR CODE - BEGIN (Exercise 2.7 - Connect Up and Down Arrow Keys)
-        # ...
+        self.sf_up_arrow_key.connect_from(self.keyboard_sensor.Button8)
+        self.sf_down_arrow_key.connect_from(self.keyboard_sensor.Button9)
         # YOUR CODE - END (Exercise 2.7 - Connect Up and Down Arrow Keys)
 
         # compute and set field-of-view (used to check Exercises 2.1 and 2.2)
@@ -135,13 +143,19 @@ class DesktopViewingSetup(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
 
         # YOUR CODE - BEGIN (Exercise 2.6 - Map Left and Right Arrow Keys)
-        if(self.sf_right_arrow_key):
-            self.setup_back_rot.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.value
+        if(self.sf_left_arrow_key.value):
+            self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
+        if(self.sf_right_arrow_key.value):
+            self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(-0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
+        #self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
 
         # YOUR CODE - END (Exercise 2.6 - Map Left and Right Arrow Keys)
 
         # YOUR CODE - BEGIN (Exercise 2.7 - Map Up and Down Arrow Keys)
-        # ...
+        if(self.sf_up_arrow_key.value):
+            self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
+        if(self.sf_down_arrow_key.value):
+            self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(-0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
         # YOUR CODE - END (Exercise 2.7 - Map Up and Down Arrow Keys)
 
         # YOUR CODE - END (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
