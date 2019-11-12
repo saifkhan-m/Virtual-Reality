@@ -122,10 +122,9 @@ class DesktopViewingSetup(avango.script.Script):
         # compute and set field-of-view (used to check Exercises 2.1 and 2.2)
         print("The camera's field of view is initially: " +
               str(round(self.compute_fov_in_deg(), 3)) + " deg")
-        #self.set_fov_in_deg(45)
-        #print('zuqwezuqe',self.screen_node.Transform.value.get_element(2,3))
-        #print("After set_fov_in_deg, the camera's field of view is: " +
-         #     str(round(self.compute_fov_in_deg(), 3)) + " deg")
+        self.set_fov_in_deg(45)
+        print("After set_fov_in_deg, the camera's field of view is: " +
+             str(round(self.compute_fov_in_deg(), 3)) + " deg")
 
         # compute model-view transform of bird (used to check Exercise 2.9)
         bird_geometry_node = self.scenegraph['/bird_rot_animation/bird_transform/bird_model']
@@ -141,21 +140,24 @@ class DesktopViewingSetup(avango.script.Script):
         rotation_speed = 60.0  # deg/s
         
         # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
-
+        self.time_before_frame=0
+        self.current_time=time.time()
+        self.rotp=0.1 if self.current_time-self.time_before_frame < 0.006 else 1.25
+        self.rotn=-0.1 if self.current_time-self.time_before_frame < 0.006 else -1.25
         # YOUR CODE - BEGIN (Exercise 2.6 - Map Left and Right Arrow Keys)
         if(self.sf_left_arrow_key.value):
-            self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
+            self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(self.rotp, 0, 1, 0) * avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
         if(self.sf_right_arrow_key.value):
-            self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(-0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
+            self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(self.rotn, 0, 1, 0) * avango.gua.make_rot_mat(-0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
         #self.setup_back_rot.Transform.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) *  self.setup_back_rot.Transform.value
 
         # YOUR CODE - END (Exercise 2.6 - Map Left and Right Arrow Keys)
 
         # YOUR CODE - BEGIN (Exercise 2.7 - Map Up and Down Arrow Keys)
         if(self.sf_up_arrow_key.value):
-            self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
+            self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(self.rotp, 1, 0, 0) * avango.gua.make_rot_mat(0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
         if(self.sf_down_arrow_key.value):
-            self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(-0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
+            self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(self.rotn, 1, 0, 0) * avango.gua.make_rot_mat(-0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
         # YOUR CODE - END (Exercise 2.7 - Map Up and Down Arrow Keys)
 
         # YOUR CODE - END (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
@@ -187,7 +189,7 @@ class DesktopViewingSetup(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 2.2 - Set desired FOV)
         screen_cam_dist=(SCREEN_SIZE.x/2)/(math.tan(math.radians(degrees/2)))
         mat=avango.gua.Mat4()
-        mat.set_element(2,3,screen_cam_dist)
+        mat.set_element(2,3,-screen_cam_dist)
         self.screen_node.Transform.value=mat
         # YOUR CODE - END (Exercise 2.2 - Set desired FOV)
 

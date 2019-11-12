@@ -108,17 +108,22 @@ class RotationAnimator(avango.script.Script):
     # output field
     sf_rot_mat = avango.gua.SFMatrix4()
     sf_rot_mat.value = avango.gua.make_identity_mat()
+    
 
     def __init__(self):
         self.super(RotationAnimator).__init__()
         # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Bird)
-        # ...
+        self.time_before_frame=0
+        self.current_time=time.time()
         # YOUR CODE - END (Exercise 2.8 - Frame-Rate Independent Mapping of Bird)
         self.always_evaluate(True)
 
     # called every frame because of self.always_evaluate(True)
     def evaluate(self):
-        # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Bird)
-        self.sf_rot_mat.value = avango.gua.make_rot_mat(0.1, 0, 1, 0) * \
-            self.sf_rot_mat.value
+
+        self.rot=0.1 if self.current_time-self.time_before_frame < 0.005 else 1.25
+        self.sf_rot_mat.value =  avango.gua.make_rot_mat(self.rot, 0, 1, 0) * avango.gua.make_rot_mat(0.1, 0, 1, 0) * \
+                self.sf_rot_mat.value
+        self.time_before_frame=self.current_time
+        self.current_time=time.time()
         # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Bird)
