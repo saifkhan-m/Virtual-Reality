@@ -9,7 +9,7 @@ from avango.script import field_has_changed
 # import python libraries
 import math
 import time
-
+from numpy.linalg import inv
 # constant size of the window on the monitor in meters
 # YOUR CODE - BEGIN (Exercise 2.0 - Screen Size)
 SCREEN_SIZE = avango.gua.Vec2(0.64, 0.40)
@@ -42,7 +42,8 @@ class DesktopViewingSetup(avango.script.Script):
     # creates and appends the viewing setup to the scenegraph
     def create(self, scenegraph):
         self.scenegraph = scenegraph
-
+        self.time_before_frame=0
+        self.current_time=time.time()
         # static transform node
         self.static_transform = avango.gua.nodes.TransformNode(Name='static_transform')
         self.static_transform.Transform.value = avango.gua.make_trans_mat(-25.0, 1.5, 0.0) * \
@@ -60,7 +61,6 @@ class DesktopViewingSetup(avango.script.Script):
         self.upDown_back_rot = avango.gua.nodes.TransformNode(Name='UPDOWN_Rot_back')
         self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(0.0,0.0,0.0,0.0)
         # YOUR CODE - END (Exercises 2.3, 2.5, 2.6, 2.7 - Node Structures)
-
         # screen node
         self.screen_dimensions = SCREEN_SIZE
         self.screen_node = avango.gua.nodes.ScreenNode(Name='screen_node')
@@ -140,8 +140,7 @@ class DesktopViewingSetup(avango.script.Script):
         rotation_speed = 60.0  # deg/s
         
         # YOUR CODE - BEGIN (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
-        self.time_before_frame=0
-        self.current_time=time.time()
+        #print(self.current_time-self.time_before_frame)
         self.rotp=0.1 if self.current_time-self.time_before_frame < 0.006 else 1.25
         self.rotn=-0.1 if self.current_time-self.time_before_frame < 0.006 else -1.25
         # YOUR CODE - BEGIN (Exercise 2.6 - Map Left and Right Arrow Keys)
@@ -159,7 +158,8 @@ class DesktopViewingSetup(avango.script.Script):
         if(self.sf_down_arrow_key.value):
             self.upDown_back_rot.Transform.value = avango.gua.make_rot_mat(self.rotn, 1, 0, 0) * avango.gua.make_rot_mat(-0.1, 1, 0, 0) *  self.upDown_back_rot.Transform.value
         # YOUR CODE - END (Exercise 2.7 - Map Up and Down Arrow Keys)
-
+        self.time_before_frame=self.current_time
+        self.current_time=time.time()
         # YOUR CODE - END (Exercise 2.8 - Frame-Rate Independent Mapping of Camera Controls)
 
     # called whenever sf_visibility_toggle_changes
@@ -181,23 +181,32 @@ class DesktopViewingSetup(avango.script.Script):
     # computes the field-of-view of the viewing setup and returns the result in degrees
     def compute_fov_in_deg(self):
         # YOUR CODE - BEGIN (Exercise 2.1 - Compute FOV from Camera-Screen Relation)
-        return 2*math.degrees(math.atan((SCREEN_SIZE.x/2)/(self.screen_node.Transform.value.get_element(2,3))))
+        return 2*math.degrees(math.atan((SCREEN_SIZE.x/2)/(self.screen_node.Width.value)))
         # YOUR CODE - BEGIN (Exercise 2.1 - Compute FOV from Camera-Screen Relation)
 
     # sets the field-of-view of the viewing setup to the specified amount of degrees
     def set_fov_in_deg(self, degrees):
         # YOUR CODE - BEGIN (Exercise 2.2 - Set desired FOV)
-        screen_cam_dist=(SCREEN_SIZE.x/2)/(math.tan(math.radians(degrees/2)))
-        mat=avango.gua.Mat4()
-        mat.set_element(2,3,-screen_cam_dist)
-        self.screen_node.Transform.value=mat
+        self.screen_node.Width.value=(SCREEN_SIZE.x/2)/(math.tan(math.radians(degrees/2)))
+        
         # YOUR CODE - END (Exercise 2.2 - Set desired FOV)
 
     # computes the model-view transformation of a given node
     def compute_model_view_transform(self, node):
         # YOUR CODE - BEGIN (Exercise 2.9 - Model-View Transformation)
-        
-        return avango.gua.make_identity_mat()
+        currentNode = node
+
+
+        worldMatrix = currentNode.Transform.value
+        while currentNode.Parent.value is not None:
+            worldMatrix =  currentNode.Parent.value.Transform.value * worldMatrix
+            currentNode = currentNode.Parent.value
+        Screein=avango.gua.make_inverse_mat(self.screen_node.Transform.value)
+        RLin=avango.gua.make_inverse_mat(self.setup_back_rot.Transform.value)
+        SPTin=avango.gua.make_inverse_mat(self.setup_back.Transform.value)
+        UDin=avango.gua.make_inverse_mat(self.upDown_back_rot.Transform.value)
+
+        return Screein*RLin*SPTin*UDin*worldMatrix
         # YOUR CODE - END (Exercise 2.9 - Model-View Transformation)
 
     # registers a window created in the class Renderer with the camera node

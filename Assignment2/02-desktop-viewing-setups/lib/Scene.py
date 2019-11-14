@@ -122,6 +122,7 @@ class RotationAnimator(avango.script.Script):
     def evaluate(self):
 
         self.rot=0.1 if self.current_time-self.time_before_frame < 0.005 else 1.25
+        
         self.sf_rot_mat.value =  avango.gua.make_rot_mat(self.rot, 0, 1, 0) * avango.gua.make_rot_mat(0.1, 0, 1, 0) * \
                 self.sf_rot_mat.value
         self.time_before_frame=self.current_time
