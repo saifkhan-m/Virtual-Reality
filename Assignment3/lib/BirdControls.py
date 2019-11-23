@@ -198,8 +198,8 @@ class BirdControls(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 3.1 - Isotonic Rate-Control)
 
         elapsed = (time.time()-self.move_start)
-        x_offset = x_input * 0.001
-        y_offset = -y_input * 0.001
+        x_offset = x_input * 0.005
+        y_offset = -y_input * 0.005
 
         self.velocity = self.velocity + avango.gua.Vec2(x_offset, y_offset)
         self.velChanged = self.velocity * elapsed
@@ -213,8 +213,8 @@ class BirdControls(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 3.2 - Isotonic Acceleration-Control)
         elapsed = (time.time()-self.move_start)
 
-        x_offset = x_input * 0.001
-        y_offset = -y_input * 0.001
+        x_offset = x_input * 0.005
+        y_offset = -y_input * 0.005
 
         self.acceleration = self.acceleration + avango.gua.Vec2(x_offset, y_offset)
         self.velocity = self.velocity + self.acceleration * elapsed
@@ -228,10 +228,12 @@ class BirdControls(avango.script.Script):
     # moves the bird using a position-control transfer function on the space navigator input
     def apply_elastic_position_control_mapping(self, x_input, y_input):
         # YOUR CODE - BEGIN (Exercise 3.3 - Elastic Position-Control)
-        x_offset = x_input * 0.0001
-        y_offset = -y_input * 0.0001
-        self.bird_node.Transform.value = self.bird_node.Transform.value * \
-            avango.gua.make_trans_mat(x_offset, y_offset, 0.0)
+        x_offset = x_input * 0.05
+        y_offset = -y_input * 0.05
+        #print(self.bird_node.Transform.value )
+        self.bird_node.Transform.value = avango.gua.make_trans_mat(x_offset, y_offset+25.0, 80)
+        
+        #self.bird_node.Transform.value=temp
         # YOUR_CODE - END (Exercise 3.3 - Elastic Position-Control)
 
     # moves the bird using a rate-control transfer function on the space navigator input
@@ -239,13 +241,13 @@ class BirdControls(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 3.4 - Elastic Rate-Control)
         
         elapsed = (time.time()-self.move_start)
-        x_offset = x_input * 0.0001
-        y_offset = -y_input * 0.0001
+        x_offset = x_input * 0.01
+        y_offset = -y_input * 0.01
 
         self.velocity = self.velocity + avango.gua.Vec2(x_offset, y_offset)
         self.velChanged = self.velocity * elapsed
 
-        self.bird_node.Transform.value = self.bird_node.Transform.value + avango.gua.make_trans_mat(self.velChanged.x, self.velChanged.y, 0.0)
+        self.bird_node.Transform.value = avango.gua.make_trans_mat(self.velChanged.x, self.velChanged.y +25, 80)
         self.move_start = time.time()
         # YOUR_CODE - END (Exercise 3.4 - Elastic Rate-Control)
 
@@ -254,15 +256,15 @@ class BirdControls(avango.script.Script):
         # YOUR CODE - BEGIN (Exercise 3.5 - Elastic Acceleration-Control)
         elapsed = (time.time()-self.move_start)
 
-        x_offset = x_input * 0.0001
-        y_offset = -y_input * 0.0001
+        x_offset = x_input * 0.01
+        y_offset = -y_input * 0.01
 
         self.acceleration = self.acceleration + avango.gua.Vec2(x_offset, y_offset)
         self.velocity = self.velocity + self.acceleration * elapsed
         
         self.velChanged = self.velocity * elapsed
 
-        self.bird_node.Transform.value = self.bird_node.Transform.value + avango.gua.make_trans_mat(self.velChanged.x, self.velChanged.y, 0.0)
+        self.bird_node.Transform.value = avango.gua.make_trans_mat(self.velChanged.x, self.velChanged.y+25, 80.0)
         self.move_start = time.time()
         # YOUR_CODE - END (Exercise 3.5 - Elastic Acceleration-Control)
 
@@ -288,42 +290,17 @@ class BirdControls(avango.script.Script):
 
     # animates the bird to a specified target position
     def animate_bird(self):
-
-        print(self.animation_start_time,
-                self.animation_start_pos, 
-                self.animation_target_pos)
-
         if self.animation_start_time is not None:
-            # YOUR CODE - BEGIN (Exercises 3.6 and 3.7 - Animation)
-            print(self.animation_start_time,
-                self.animation_start_pos, 
-                self.animation_target_pos)
-            print("************************")
-            slope = (self.animation_target_pos.y - self.animation_start_pos.y) / (self.animation_target_pos.x - self.animation_start_pos.x)
-            c = self.animation_target_pos.y - (slope * self.animation_target_pos.x)
-            fraction = 0.001
-            ft=(3*pow(fraction*self.counter,2)) - (2*pow(fraction*self.counter,3))
-            tempy = self.animation_start_pos.y + ((self.animation_target_pos.y- self.animation_start_pos.y) * ft)
-            tempx = (tempy - c) / slope
-            #t=math.atan(slope)
-            #cost
-            self.bird_node.Transform.value = avango.gua.make_trans_mat(round(tempx,3), round(tempy,3), 80.0)
-            #if(self.counter%5==0):
-
-            self.counter+=1
-            #print(round(tempx,3),self.animation_target_pos.x)
-            #print(round(tempy,3),self.animation_target_pos.y)
-
-            #if(self.animation_target_pos.x < 0):
-
-
-            if abs(round(tempx,3))>= abs(self.animation_target_pos.x) and abs(round(tempy,3))>= abs(self.animation_target_pos.y) :
+            # YOUR CODE - BEGIN (Exercises 3.6 and 3.7 - Animation
+            fraction= 0.1
+            fraction = 3*pow(fraction,2) -2*pow(fraction,3)
+            temp = self.animation_start_pos.lerp_to(self.animation_target_pos, fraction)
+            self.bird_node.Transform.value = avango.gua.make_trans_mat(temp.x, temp.y, 80.0)
+            self.animation_start_pos = temp
+            if temp.x == self.animation_target_pos.x and temp.y == self.animation_target_pos.y:
                 self.animation_start_time = None
                 self.animation_start_pos = None 
                 self.animation_target_pos = None
-                self.counter=0
-
-
             # YOUR_CODE - END (Exercises 3.6 and 3.7 - Animation)
 
     # makes the bird appear on the other screen side when exiting the field of view
